@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "users": {
+      "title": "Users",
+      "description": "User profiles and authentication data",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "userNotices": {
+      "title": "Saved Notices",
+      "description": "Notices bookmarked by authenticated users",
+      "properties": {
+        "userId": { "type": "string" },
+        "noticeId": { "type": "string" },
+        "title": { "type": "string" },
+        "savedAt": { "type": "string" }
+      }
+    },
+    "chatHistory": {
+      "title": "Chat History",
+      "description": "User conversation logs with Gemini AI",
+      "properties": {
+        "userId": { "type": "string" },
+        "messages": { "type": "array" },
+        "mode": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    }
+  }
+}

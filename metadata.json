@@ -1,0 +1,6 @@
+{
+  "name": "New Saraswati Vidya Mandir",
+  "description": "Official website and online admissions portal for New Saraswati Vidya Mandir Secondary School (newsaraswati / NSVM), BDM-12 Airy, Kanchanpur, Nepal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

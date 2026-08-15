@@ -1,0 +1,41 @@
+{
+  "short_name": "NSVM",
+  "name": "New Saraswati Vidya Mandir Secondary School",
+  "description": "Official school app for notices, gallery, admissions, and contact information.",
+  "id": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/images/branding/school-logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/branding/school-logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#FBFDFF",
+  "theme_color": "#075ECB",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/images/gallery/school-background.jpg",
+      "sizes": "540x720",
+      "type": "image/jpeg",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/images/gallery/GAL1.jpg",
+      "sizes": "2048x1536",
+      "type": "image/jpeg",
+      "form_factor": "wide"
+    }
+  ]
+}

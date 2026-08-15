@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Core Main Page (Home) -->
+  <url>
+    <loc>https://nsvm.edu.np/</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/branding/school-logo.jpg</image:loc>
+      <image:title>New Saraswati Vidya Mandir Secondary School Logo (newsaraswati)</image:title>
+      <image:caption>Official emblem and logo of New Saraswati Vidya Mandir, BDM-12 Airy, Kanchanpur</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/school-background.jpg</image:loc>
+      <image:title>New Saraswati Vidya Mandir School Campus Building</image:title>
+      <image:caption>Modern academic infrastructure and campus ground at Airy, Kanchanpur</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/staff/principal-AMRAJ-BHATT-SIR.webp</image:loc>
+      <image:title>Principal Amraj Bhatt - New Saraswati Vidya Mandir</image:title>
+      <image:caption>Leadership and vision message by Principal Amraj Bhatt</image:caption>
+    </image:image>
+  </url>
+
+  <!-- About School & Leadership -->
+  <url>
+    <loc>https://nsvm.edu.np/about</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/about?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/about?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/about" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/staff/principal-AMRAJ-BHATT-SIR.webp</image:loc>
+      <image:title>Principal Amraj Bhatt</image:title>
+      <image:caption>Academic leadership and vision at New Saraswati Vidya Mandir</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/staff/suresh-bhandari.webp</image:loc>
+      <image:title>Chairperson Suresh Bhandari</image:title>
+      <image:caption>School Management Committee Chairperson</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Academic Programs (Montessori to Grade 12 Management) -->
+  <url>
+    <loc>https://nsvm.edu.np/courses</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/courses?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/courses?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/courses" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/food-fest-and-science-exchibition-gal.jpg</image:loc>
+      <image:title>Practical Science &amp; Business Exhibition at NSVM</image:title>
+      <image:caption>Hands-on learning and practical management workshops for students</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Online Admission 2082 BS -->
+  <url>
+    <loc>https://nsvm.edu.np/apply</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/apply?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/apply?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/apply" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/cover-page1.jpg</image:loc>
+      <image:title>Online Student Admission 2082 B.S. - New Saraswati Vidya Mandir</image:title>
+      <image:caption>Enrollment open from Montessori to Grade 12 (+2 Management)</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Notices, Circulars &amp; Exam Routines -->
+  <url>
+    <loc>https://nsvm.edu.np/notices</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/notices?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/notices?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/notices" />
+  </url>
+
+  <!-- Contact &amp; Directions -->
+  <url>
+    <loc>https://nsvm.edu.np/contact</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/contact?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/contact?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/contact" />
+  </url>
+
+  <!-- School Staffs &amp; Faculty -->
+  <url>
+    <loc>https://nsvm.edu.np/school-staffs</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/school-staffs?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/school-staffs?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/school-staffs" />
+  </url>
+
+  <!-- Secondary &amp; +2 Level Staffs -->
+  <url>
+    <loc>https://nsvm.edu.np/secondary-staffs</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/secondary-staffs?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/secondary-staffs?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/secondary-staffs" />
+  </url>
+
+  <!-- Photo Gallery &amp; Campus Life with ALL images -->
+  <url>
+    <loc>https://nsvm.edu.np/gallery</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/gallery?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/gallery?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/gallery" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/school-background.jpg</image:loc>
+      <image:title>School Campus</image:title>
+      <image:caption>The New Saraswati Vidya Mandir campus where everyday learning and school life begin.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/assembly-gal.jpg</image:loc>
+      <image:title>Morning Assembly</image:title>
+      <image:caption>Students gathered in disciplined rows for assembly, routine, and shared school values.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/cover-page1.jpg</image:loc>
+      <image:title>Admission Campaign</image:title>
+      <image:caption>A school admission banner highlighting the complete academic pathway at NSVM.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/food-fest-and-science-exchibition-gal.jpg</image:loc>
+      <image:title>Food Fest &amp; Science Exhibition</image:title>
+      <image:caption>A practical exhibition table connecting science, presentation, and student participation.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/drawing-gal.jpg</image:loc>
+      <image:title>Student Drawing</image:title>
+      <image:caption>Creative drawing work that gives students space for observation, imagination, and expression.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/game-gal.jpg</image:loc>
+      <image:title>Game Time</image:title>
+      <image:caption>Students participating in a school game activity on campus.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/tour-gal.jpg</image:loc>
+      <image:title>Educational Tour</image:title>
+      <image:caption>A tour-day moment with students ready for exposure, travel, and learning outside class.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/program-gal.jpg</image:loc>
+      <image:title>School Program</image:title>
+      <image:caption>A formal school program with students, guests, and the NSVM community.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/prize-distribution-gal.jpg</image:loc>
+      <image:title>Prize Distribution Day</image:title>
+      <image:caption>Formal prize distribution with students and school leadership.</image:caption>
+    </image:image>
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/gallery/festival-gal.jpg</image:loc>
+      <image:title>Festival Celebration</image:title>
+      <image:caption>Students celebrating festival culture and tradition at school.</image:caption>
+    </image:image>
+  </url>
+
+  <!-- 3D Virtual Tour -->
+  <url>
+    <loc>https://nsvm.edu.np/virtual-tour</loc>
+    <lastmod>2026-08-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/virtual-tour?lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/virtual-tour?lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/virtual-tour" />
+  </url>
+
+  <!-- Dynamic Notice &amp; Announcement Posts -->
+  <url>
+    <loc>https://nsvm.edu.np/notices?id=1</loc>
+    <lastmod>2082-04-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/notices?id=1&amp;lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/notices?id=1&amp;lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/notices?id=1" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/branding/school-logo.jpg</image:loc>
+      <image:title>[NOTICE] Admission open for academic session 2082 BS - New Saraswati Vidya Mandir</image:title>
+      <image:caption>New Saraswati Vidya Mandir is pleased to announce that online and physical admission registration for the upcoming academic session 2082 B.S. is open.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://nsvm.edu.np/notices?id=2</loc>
+    <lastmod>2082-03-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/notices?id=2&amp;lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/notices?id=2&amp;lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/notices?id=2" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/branding/school-logo.jpg</image:loc>
+      <image:title>[EXAM] First-term examination routine published - New Saraswati Vidya Mandir</image:title>
+      <image:caption>The First-Term Examination for academic session 2082 B.S. has been scheduled.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://nsvm.edu.np/notices?id=3</loc>
+    <lastmod>2082-03-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/notices?id=3&amp;lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/notices?id=3&amp;lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/notices?id=3" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/branding/school-logo.jpg</image:loc>
+      <image:title>[EVENT] Annual cultural programme - New Saraswati Vidya Mandir</image:title>
+      <image:caption>We are pleased to invite the school community to the Annual Programme 2082.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://nsvm.edu.np/notices?id=4</loc>
+    <lastmod>2082-02-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/notices?id=4&amp;lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/notices?id=4&amp;lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/notices?id=4" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/branding/school-logo.jpg</image:loc>
+      <image:title>[EVENT] Inter-house athletics meet results announced - New Saraswati Vidya Mandir</image:title>
+      <image:caption>The Annual Inter-House Athletics Meet 2082 has concluded successfully.</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://nsvm.edu.np/notices?id=5</loc>
+    <lastmod>2082-02-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.80</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://nsvm.edu.np/notices?id=5&amp;lang=en" />
+    <xhtml:link rel="alternate" hreflang="ne" href="https://nsvm.edu.np/notices?id=5&amp;lang=ne" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://nsvm.edu.np/notices?id=5" />
+    <image:image>
+      <image:loc>https://nsvm.edu.np/images/branding/school-logo.jpg</image:loc>
+      <image:title>[NOTICE] Holiday notice on the occasion of Majdoor Divas - New Saraswati Vidya Mandir</image:title>
+      <image:caption>New Saraswati Vidya Mandir will remain closed on International Workers Day.</image:caption>
+    </image:image>
+  </url>
+
+</urlset>
