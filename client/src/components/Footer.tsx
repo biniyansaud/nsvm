@@ -320,8 +320,9 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* SEO Sitemap & Internal Linking Directory */}
-        <div
+        {/* The XML sitemap and robots.txt remain public SEO resources. The
+            duplicate link directory is intentionally not rendered in the footer. */}
+        {false && <div
           className="footer-seo-directory mt-8 pt-6 border-t border-white/15"
           aria-label="Search engine sitemap and internal links"
         >
@@ -476,7 +477,7 @@ export default function Footer() {
               </div>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Scrolling Marquee Section */}
         <div className="mt-4 sm:mt-6 overflow-hidden border-t border-b border-white/10 py-2.5 sm:py-3 bg-slate-950/40 backdrop-blur-sm relative rounded-2xl">
