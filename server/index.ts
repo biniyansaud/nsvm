@@ -217,13 +217,16 @@ function requireSupabaseConfig() {
 
 async function supabaseRequest(pathname: string, init: RequestInit = {}) {
   const { url, key } = requireSupabaseConfig();
+  const headers: Record<string, string> = {
+    apikey: key,
+    ...(init.headers as Record<string, string> || {}),
+  };
+  // Legacy service_role keys are JWTs and can be used as a bearer token.
+  // New sb_secret_* keys are opaque API keys and must stay in `apikey`.
+  if (!key.startsWith("sb_") && !headers.Authorization) headers.Authorization = `Bearer ${key}`;
   const response = await fetch(`${url}${pathname}`, {
     ...init,
-    headers: {
-      apikey: key,
-      Authorization: `Bearer ${key}`,
-      ...(init.headers || {}),
-    },
+    headers,
   });
 
   if (!response.ok) {
@@ -272,7 +275,11 @@ async function sendAdminOtp(email: string, code: string) {
       text: `Your administrator verification code is ${code}. It expires in 10 minutes. If you did not request this, ignore this email.`,
     }),
   });
-  if (!response.ok) throw new Error("OTP email delivery failed.");
+  if (!response.ok) {
+    if (response.status === 401) throw new Error("Resend rejected RESEND_API_KEY.");
+    if (response.status === 403) throw new Error("Resend rejected OTP_FROM_EMAIL; verify the sender domain or use onboarding@resend.dev.");
+    throw new Error(`Resend email delivery failed (${response.status}).`);
+  }
 }
 
 async function readFileContent() {
