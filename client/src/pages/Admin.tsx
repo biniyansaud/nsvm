@@ -52,7 +52,6 @@ import {
   adminLoginWithSupabase,
   requestAdminEmailOtp,
   verifyAdminEmailOtp,
-  requestAdminPasswordReset,
   adminLogoutWithSupabase,
   SupabaseOnlineApplication,
 } from "@/lib/supabaseApi";
@@ -195,9 +194,6 @@ export default function Admin() {
   const [turnstileToken, setTurnstileToken] = useState("");
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | undefined>(undefined);
-  const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.search).get("reset_password") === "1");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
   const [activeTab, setActiveTab] = useState<AdminTab>("gallery");
   const [selectedGalleryId, setSelectedGalleryId] = useState<string | null>(null);
@@ -214,7 +210,7 @@ export default function Admin() {
   const [turnstileError, setTurnstileError] = useState("");
 
   useEffect(() => {
-    if (isLoading || isAuthed || passwordRecovery || !turnstileSiteKey || !turnstileContainerRef.current) return;
+    if (isLoading || isAuthed || !turnstileSiteKey || !turnstileContainerRef.current) return;
     let retryTimer: number | undefined;
     let stopped = false;
     const renderWidget = () => {
@@ -256,7 +252,7 @@ export default function Admin() {
       if (retryTimer) window.clearTimeout(retryTimer);
       script.removeEventListener("load", retryRender);
     };
-  }, [isLoading, isAuthed, passwordRecovery, turnstileSiteKey]);
+  }, [isLoading, isAuthed, turnstileSiteKey]);
 
   const resetTurnstile = () => {
     setTurnstileToken("");
@@ -272,8 +268,9 @@ export default function Admin() {
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (!alive) return;
         if (event === "PASSWORD_RECOVERY") {
-          setPasswordRecovery(true);
           setIsAuthed(false);
+          setStatus("Password recovery is disabled. Contact the developer.");
+          await supabase?.auth.signOut();
         } else if (event === "SIGNED_OUT") {
           setIsAuthed(false);
         } else if (session && event === "SIGNED_IN") {
@@ -295,8 +292,13 @@ export default function Admin() {
         return;
       }
       if (isSupabaseConfigured) {
-        if (passwordRecovery) {
-          if (alive) setIsLoading(false);
+        if (new URLSearchParams(window.location.search).get("reset_password") === "1") {
+          await supabase.auth.signOut();
+          window.history.replaceState({}, "", "/admin");
+          if (alive) {
+            setStatus("Password recovery is disabled. Contact the developer.");
+            setIsLoading(false);
+          }
           return;
         }
         const isSessionValid = await checkSupabaseAdminSession();
@@ -345,7 +347,7 @@ export default function Admin() {
       if (authListener) authListener.unsubscribe();
       window.removeEventListener("admin-unauthorized", handleUnauthorized);
     };
-  }, [passwordRecovery]);
+  }, []);
 
   // Automatic 15-minute inactivity logout timer
   useEffect(() => {
@@ -576,48 +578,6 @@ export default function Admin() {
     }
   };
 
-  const requestPasswordReset = async () => {
-    setIsSaving(true);
-    try {
-      if (!email) throw new Error("Enter your administrator email first.");
-      if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
-      await requestAdminPasswordReset(email, turnstileToken);
-      resetTurnstile();
-      setStatus("If this is the approved administrator email, a password-reset link has been sent.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to start password recovery.";
-      setStatus(message);
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const updateForgottenPassword = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setIsSaving(true);
-    try {
-      if (!supabase) throw new Error("Supabase credentials not configured.");
-      if (newPassword.length < 12) throw new Error("Use a password with at least 12 characters.");
-      if (newPassword !== confirmPassword) throw new Error("The new passwords do not match.");
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
-      if (error) throw error;
-      await adminLogoutWithSupabase();
-      window.history.replaceState({}, "", "/admin");
-      setPasswordRecovery(false);
-      setNewPassword("");
-      setConfirmPassword("");
-      setStatus("Password updated. Sign in with your new password and complete a new security check.");
-      toast.success("Password updated successfully.");
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to update the password.";
-      setStatus(message);
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const logout = async () => {
     if (isSupabaseConfigured) {
       await adminLogoutWithSupabase();
@@ -755,26 +715,7 @@ export default function Admin() {
             </div>
           </section>
 
-          {passwordRecovery ? <form onSubmit={updateForgottenPassword} className="admin-login-card">
-            <span className="admin-login-icon">
-              <KeyRound className="h-6 w-6 text-teal-700" />
-            </span>
-            <h2>Set a new password</h2>
-            <p>This recovery link is single-use. After changing your password, sign in again with CAPTCHA and email OTP.</p>
-            <div className="mt-5 space-y-4">
-              <Field label="New password">
-                <input type="password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} className={inputClass} minLength={12} required autoComplete="new-password" />
-              </Field>
-              <Field label="Confirm new password">
-                <input type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} className={inputClass} minLength={12} required autoComplete="new-password" />
-              </Field>
-            </div>
-            {status ? <p className="admin-status-note mt-3">{status}</p> : null}
-            <button type="submit" disabled={isSaving} className={`${buttonBase} admin-login-button mt-4`}>
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              Save new password
-            </button>
-          </form> : <form onSubmit={login} className="admin-login-card">
+          <form onSubmit={login} className="admin-login-card">
             <span className="admin-login-icon">
               <ShieldCheck className="h-6 w-6 text-teal-700" />
             </span>
@@ -838,15 +779,7 @@ export default function Admin() {
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
               {otpRequested ? "Verify and Sign In" : "Send email code"}
             </button>
-            {!otpRequested ? <button
-              type="button"
-              disabled={isSaving}
-              onClick={() => void requestPasswordReset()}
-              className={`${buttonBase} mt-2 w-full border border-teal-700 text-teal-800 hover:bg-teal-50`}
-            >
-              Forgot password?
-            </button> : null}
-          </form>}
+          </form>
         </div>
       </main>
     );

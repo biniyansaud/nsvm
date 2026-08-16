@@ -986,15 +986,6 @@ export async function verifyAdminEmailOtp(challengeId: string, code: string): Pr
   if (!(await checkSupabaseAdminSession())) throw new Error("This account is not authorized as an administrator.");
 }
 
-export async function requestAdminPasswordReset(email: string, captchaToken: string): Promise<void> {
-  if (!supabase) throw new Error("Supabase credentials are not configured.");
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/admin?reset_password=1`,
-    captchaToken,
-  });
-  if (error) throw new Error(error.message || "Unable to start password recovery. Please try again later.");
-}
-
 export async function adminLogoutWithSupabase() {
   if (!supabase) return;
   await supabase.auth.signOut();

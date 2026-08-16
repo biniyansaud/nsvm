@@ -34,7 +34,6 @@ const supabaseContentTable = process.env.SUPABASE_CONTENT_TABLE || "site_content
 const supabaseContentId = process.env.SUPABASE_CONTENT_ID || "radiant";
 const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
-const appUrl = process.env.APP_URL?.replace(/\/+$/, "");
 const resendApiKey = process.env.RESEND_API_KEY;
 const otpFromEmail = process.env.OTP_FROM_EMAIL || "onboarding@resend.dev";
 
@@ -865,33 +864,6 @@ Could you please specify your query? For example, feel free to ask about:
       console.info("Admin direct OTP requested", { ip: hashAuditValue(ip), email: hashAuditValue(email) });
     } catch (error) {
       console.error("Admin direct OTP error", { ip: hashAuditValue(ip), error: error instanceof Error ? error.message : "unknown" });
-    }
-    return res.status(202).json({ ok: true });
-  });
-
-  app.post("/api/admin/request-password-reset", async (req, res) => {
-    const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
-    const ip = req.ip || req.socket.remoteAddress || "unknown";
-    if (!(await verifyTurnstileToken(req.body?.turnstileToken, ip))) {
-      console.warn("Admin password reset blocked by Turnstile", { ip: hashAuditValue(ip) });
-      return res.status(403).json({ message: "Complete the security check and try again." });
-    }
-    if (!appUrl) return res.status(503).json({ message: "Password recovery is not configured. Contact the site owner." });
-    // Always give the same response so this endpoint cannot confirm the admin email.
-    if (!otpAdminEmail || email !== otpAdminEmail || !/^\S+@\S+\.\S+$/.test(email) || !allowOtpRequest(ip, email)) {
-      console.warn("Admin password reset denied", { ip: hashAuditValue(ip), email: hashAuditValue(email) });
-      return res.status(202).json({ ok: true });
-    }
-    try {
-      const response = await supabaseRequest("/auth/v1/recover", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, redirect_to: `${appUrl}/admin?reset_password=1` }),
-      });
-      if (!response.ok) throw new Error(`Supabase recovery request failed with ${response.status}`);
-      console.info("Admin password reset requested", { ip: hashAuditValue(ip), email: hashAuditValue(email) });
-    } catch (error) {
-      console.error("Admin password reset error", { ip: hashAuditValue(ip), error: error instanceof Error ? error.message : "unknown" });
     }
     return res.status(202).json({ ok: true });
   });
