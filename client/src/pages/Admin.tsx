@@ -423,7 +423,6 @@ export default function Admin() {
 
   useEffect(() => {
     if (!isAuthed) return;
-    if (!selectedGalleryId && content.gallery[0]) setSelectedGalleryId(content.gallery[0].id);
     if (!selectedNoticeId && content.notices[0]) setSelectedNoticeId(content.notices[0].id);
 
     const firstSchoolCategory = content.faculty.schoolStaffCategories[0];
@@ -1381,13 +1380,13 @@ function Toolbar({
           </span>
         </h2>
       </div>
-      <div className="flex items-center gap-2">
-        <label className="relative flex-1 sm:w-64" aria-label={`Search ${title}`}>
+      <div className="flex min-w-0 items-center gap-2">
+        <label className="relative min-w-0 flex-1 sm:w-64" aria-label={`Search ${title}`}>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
           <input
             value={query}
             onChange={(event) => onQuery(event.target.value)}
-            className={`${inputClass} pl-8.5 text-xs py-2`}
+            className={`${inputClass} min-w-0 pl-9 text-xs py-2`}
             placeholder={`Search ${title}...`}
             aria-label={`Search ${title}`}
           />
