@@ -216,7 +216,7 @@ export default function Admin() {
   const [turnstileError, setTurnstileError] = useState("");
 
   useEffect(() => {
-    if (isAuthed || passwordRecovery || !turnstileSiteKey || !turnstileContainerRef.current) return;
+    if (isLoading || isAuthed || passwordRecovery || !turnstileSiteKey || !turnstileContainerRef.current) return;
     let retryTimer: number | undefined;
     let stopped = false;
     const renderWidget = () => {
@@ -258,7 +258,7 @@ export default function Admin() {
       if (retryTimer) window.clearTimeout(retryTimer);
       script.removeEventListener("load", retryRender);
     };
-  }, [isAuthed, passwordRecovery, turnstileSiteKey]);
+  }, [isLoading, isAuthed, passwordRecovery, turnstileSiteKey]);
 
   const resetTurnstile = () => {
     setTurnstileToken("");
