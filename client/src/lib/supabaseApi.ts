@@ -959,7 +959,10 @@ export async function startAdminPasswordOtp(email: string, password: string, tur
     credentials: "include",
     body: JSON.stringify({ email, password, turnstileToken }),
   });
-  if (!response.ok) throw new Error("Unable to verify credentials. Please try again later.");
+  const payload = await response.json().catch(() => ({})) as { message?: string };
+  if (!response.ok) {
+    throw new Error(payload.message || "Unable to verify credentials. Please try again later.");
+  }
 }
 
 export async function requestAdminOtp(email: string, turnstileToken: string): Promise<void> {

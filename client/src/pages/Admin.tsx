@@ -773,13 +773,13 @@ export default function Admin() {
             <p>Verify your administrator password, then enter the one-time code sent to that email.</p>
             <div className="mt-5 space-y-4">
               <Field label="Admin Email">
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <div className="admin-login-input-row">
+                  <Mail className="admin-login-field-icon h-4 w-4 text-slate-500 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className={`${inputClass} pl-9`}
+                    className={`${inputClass} admin-login-row-input`}
                     placeholder="admin@school.edu.np"
                     required
                     autoFocus
@@ -788,13 +788,13 @@ export default function Admin() {
               </Field>
 
               {!otpRequested ? <Field label="Admin Password">
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <div className="admin-login-input-row">
+                  <KeyRound className="admin-login-field-icon h-4 w-4 text-slate-500 pointer-events-none" />
                   <input
                     type="password"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    className={`${inputClass} pl-9`}
+                    className={`${inputClass} admin-login-row-input`}
                     placeholder="Enter password"
                     required
                     autoComplete="current-password"
@@ -803,14 +803,14 @@ export default function Admin() {
               </Field> : null}
 
               {otpRequested ? <Field label="One-time verification code">
-                <div className="relative">
-                  <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                <div className="admin-login-input-row">
+                  <KeyRound className="admin-login-field-icon h-4 w-4 text-slate-500 pointer-events-none" />
                   <input
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     value={otp}
                     onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 8))}
-                    className={`${inputClass} pl-9`}
+                    className={`${inputClass} admin-login-row-input`}
                     placeholder="Enter code"
                     required
                   />

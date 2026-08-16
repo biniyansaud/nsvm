@@ -101,6 +101,10 @@ function isLowMemoryOrSaveData(): boolean {
   return false;
 }
 
+function isMobileViewport(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+}
+
 /**
  * Low-level utility to load a single image via browser Image constructor
  */
@@ -205,17 +209,25 @@ export class ImagePreloadManager {
 
     // 2. Schedule Tier 2 Mid-priority assets after initial interactive state (approx 1.5s delay)
     scheduleIdleWork(() => {
-      this.preloadBatch(PRELOAD_TIERS.medium);
+      const mediumAssets = isMobileViewport()
+        ? PRELOAD_TIERS.medium.slice(0, 2)
+        : PRELOAD_TIERS.medium;
+      this.preloadBatch(mediumAssets);
     }, 1500);
 
     // 3. Defer remaining Tier 3 Low-priority assets (all gallery photos, staff photos) to idle browser ticks
-    const isMobileDataSave = isLowMemoryOrSaveData();
+    const isMobileDataSave = isLowMemoryOrSaveData() || isMobileViewport();
     const chunkSize = isMobileDataSave ? 1 : 3;
     const intervalMs = isMobileDataSave ? 1200 : 500;
 
-    scheduleIdleWork(() => {
-      this.preloadSequentialChunks(lowTierUnique, chunkSize, intervalMs);
-    }, 2500);
+    // Native loading="lazy" already requests images close to the viewport.
+    // Avoid competing with those requests on phones and let the browser prioritize
+    // the image the visitor is actually looking at.
+    if (!isMobileDataSave) {
+      scheduleIdleWork(() => {
+        this.preloadSequentialChunks(lowTierUnique, chunkSize, intervalMs);
+      }, 2500);
+    }
   }
 
   /**
@@ -247,6 +259,10 @@ export class ImagePreloadManager {
    */
   private static async processBackgroundQueue(): Promise<void> {
     if (this.isPreloadingBackground || backgroundQueue.size === 0) return;
+    if (isMobileViewport()) {
+      backgroundQueue.clear();
+      return;
+    }
     this.isPreloadingBackground = true;
 
     const isMobileDataSave = isLowMemoryOrSaveData();
@@ -270,8 +286,10 @@ export class ImagePreloadManager {
   public static preloadRouteAssets(route: string): void {
     const assets = ROUTE_ASSETS[route];
     if (assets && assets.length > 0) {
-      // Preload context-specific assets immediately on request with high priority
-      assets.forEach((src) => {
+      // On mobile, preload only the first critical assets. Loading an entire
+      // gallery here competes with native lazy-loaded images near the viewport.
+      const prioritizedAssets = assets.slice(0, isMobileViewport() ? 2 : 4);
+      prioritizedAssets.forEach((src) => {
         preloadImage(src, "high");
       });
     }

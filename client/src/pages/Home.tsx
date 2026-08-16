@@ -6,7 +6,6 @@ import {
   BookOpen,
   Building2,
   CalendarDays,
-  Compass,
   GraduationCap,
   HeartHandshake,
   Microscope,
@@ -158,7 +157,11 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, ease: [0.215, 0.61, 0.355, 1], delay: 0.15 }}
               >
-                New Saraswati Vidya Mandir Secondary School
+                <>
+                  <span className="home-hero-title-main">New Saraswati</span>
+                  <span className="home-hero-title-accent">Vidya Mandir</span>
+                  <span className="home-hero-title-subtitle">Secondary School</span>
+                </>
               </motion.h1>
 
               <motion.p
@@ -167,9 +170,9 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65, ease: [0.215, 0.61, 0.355, 1], delay: 0.25 }}
               >
-                A disciplined, caring academic community in {SCHOOL.location},
-                helping students grow with quality education, confidence, and
-                character from Montessori to Grade XII.
+                A trusted learning community in {SCHOOL.location}, helping
+                students build strong foundations, practical skills, and the
+                confidence to lead — from Montessori to Grade XII.
               </motion.p>
 
               <motion.div
@@ -194,7 +197,7 @@ export default function Home() {
               </motion.div>
 
               <motion.div
-                className="hero-proof-grid grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-4 mt-6"
+                className="hero-proof-grid grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mt-6"
                 variants={{
                   hidden: { opacity: 0 },
                   visible: {
@@ -216,7 +219,7 @@ export default function Home() {
                   }}
                 >
                   <Award className="h-4 w-4 text-secondary shrink-0" />
-                  Est. {SCHOOL.established}
+                  <span className="hero-proof-label">Est. {SCHOOL.established}</span>
                 </motion.span>
                 <motion.span
                   className="hero-proof-item text-xs sm:text-sm"
@@ -226,17 +229,7 @@ export default function Home() {
                   }}
                 >
                   <Building2 className="h-4 w-4 text-secondary shrink-0" />
-                  BDM-12, Airy, Kanchanpur
-                </motion.span>
-                <motion.span
-                  className="hero-proof-item text-xs sm:text-sm"
-                  variants={{
-                    hidden: { opacity: 0, y: 10 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } }
-                  }}
-                >
-                  <Compass className="h-4 w-4 text-secondary shrink-0" />
-                  Quality / Confidence / Character
+                  <span className="hero-proof-label">BDM-12, Airy, Kanchanpur</span>
                 </motion.span>
               </motion.div>
             </div>
