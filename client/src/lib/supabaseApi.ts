@@ -914,14 +914,13 @@ export async function deleteOnlineApplicationFromSupabase(id: string): Promise<b
 // Admin Auth & Authorization (Table: admin_users + Supabase Auth)
 // ==========================================
 
-export async function adminLoginWithSupabase(email: string, pass: string, captchaToken: string) {
+export async function adminLoginWithSupabase(email: string, pass: string) {
   if (!supabase) throw new Error("Supabase credentials not configured.");
 
   // 1. Authenticate with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: pass,
-    options: { captchaToken },
   });
 
   if (authError) {

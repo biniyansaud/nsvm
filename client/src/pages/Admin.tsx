@@ -552,7 +552,7 @@ export default function Admin() {
         if (!otpRequested) {
           if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
           await verifyAdminTurnstile(turnstileToken);
-          await adminLoginWithSupabase(email, password, turnstileToken);
+          await adminLoginWithSupabase(email, password);
           resetTurnstile();
           const challenge = await requestAdminEmailOtp();
           setOtpChallengeId(challenge.challengeId);
