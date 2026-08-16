@@ -51,9 +51,9 @@ import {
   uploadGalleryImage,
   uploadPDFDocument,
   adminLoginWithSupabase,
-  startAdminPasswordOtp,
+  startAdminMfaChallenge,
+  verifyAdminMfa,
   requestAdminPasswordReset,
-  verifyAdminOtp,
   adminLogoutWithSupabase,
   SupabaseOnlineApplication,
 } from "@/lib/supabaseApi";
@@ -94,7 +94,6 @@ declare global {
     };
   }
 }
-
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: "include",
@@ -193,12 +192,14 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [otpRequested, setOtpRequested] = useState(false);
-  const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.search).get("reset_password") === "1");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [mfaFactorId, setMfaFactorId] = useState("");
+  const [mfaChallengeId, setMfaChallengeId] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | undefined>(undefined);
+  const [passwordRecovery, setPasswordRecovery] = useState(() => new URLSearchParams(window.location.search).get("reset_password") === "1");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [content, setContent] = useState<SiteContent>(defaultSiteContent);
   const [activeTab, setActiveTab] = useState<AdminTab>("gallery");
   const [selectedGalleryId, setSelectedGalleryId] = useState<string | null>(null);
@@ -214,12 +215,7 @@ export default function Admin() {
   const [status, setStatus] = useState("");
 
   useEffect(() => {
-    if (passwordRecovery) {
-      turnstileWidgetIdRef.current = undefined;
-      setTurnstileToken("");
-      return;
-    }
-    if (isAuthed || !turnstileSiteKey || !turnstileContainerRef.current) return;
+    if (isAuthed || passwordRecovery || !turnstileSiteKey || !turnstileContainerRef.current) return;
     const renderWidget = () => {
       if (!window.turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) return;
       turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
@@ -229,12 +225,6 @@ export default function Admin() {
         "error-callback": () => setTurnstileToken(""),
       });
     };
-    const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"]');
-    if (existingScript) {
-      existingScript.addEventListener("load", renderWidget);
-      renderWidget();
-      return () => existingScript.removeEventListener("load", renderWidget);
-    }
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async = true;
@@ -242,7 +232,7 @@ export default function Admin() {
     script.addEventListener("load", renderWidget);
     document.head.appendChild(script);
     return () => script.removeEventListener("load", renderWidget);
-  }, [isAuthed, isLoading, passwordRecovery]);
+  }, [isAuthed, passwordRecovery]);
 
   const resetTurnstile = () => {
     setTurnstileToken("");
@@ -273,15 +263,19 @@ export default function Admin() {
     }
 
     async function initAdmin() {
+      if (!isSupabaseConfigured || !supabase) {
+        if (alive) {
+          setStatus("Supabase authentication is not configured.");
+          setIsLoading(false);
+        }
+        return;
+      }
       if (isSupabaseConfigured) {
         if (passwordRecovery) {
           if (alive) setIsLoading(false);
           return;
         }
-        // This CMS deliberately requires a fresh OTP challenge on every visit
-        // to /admin; persisted browser sessions must never reopen the editor.
-        await supabase?.auth.signOut({ scope: "local" });
-        const isSessionValid = false;
+        const isSessionValid = await checkSupabaseAdminSession();
         if (alive) {
           if (isSessionValid) {
             setIsAuthed(true);
@@ -525,39 +519,32 @@ export default function Admin() {
     setIsSaving(true);
     setStatus("Authenticating...");
     try {
-      if (!turnstileSiteKey) throw new Error("Admin security check is not configured. Contact the site owner.");
-      if (!turnstileToken) throw new Error("Complete the security check before continuing.");
       if (isSupabaseConfigured) {
         if (!email || (!otpRequested && !password)) {
           throw new Error("Please enter your administrator email and password.");
         }
         if (!otpRequested) {
-          await startAdminPasswordOtp(email, password, turnstileToken);
+          if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
+          await adminLoginWithSupabase(email, password, turnstileToken);
           resetTurnstile();
+          const challenge = await startAdminMfaChallenge();
+          setMfaFactorId(challenge.factorId);
+          setMfaChallengeId(challenge.challengeId);
           setOtpRequested(true);
-          setStatus("If this email is an approved administrator account, a verification code has been sent.");
+          setStatus("Enter the verification code from your authenticator app.");
           return;
         }
-        if (!otp.trim()) throw new Error("Enter the verification code sent to your email.");
-        await verifyAdminOtp(email, otp.trim(), turnstileToken);
-        resetTurnstile();
+        if (!otp.trim()) throw new Error("Enter the verification code.");
+        await verifyAdminMfa(mfaFactorId, mfaChallengeId, otp.trim());
         setIsAuthed(true);
-        setStatus("Authenticated via Supabase");
+        setStatus("Signed in");
         toast.success("Welcome back! Signed in to Admin Workspace.");
         const sbData = await fetchFullSiteContentFromSupabase();
         if (sbData) setContent(mergeContent(sbData));
         return;
       }
 
-      await api("/api/admin/login", {
-        method: "POST",
-        body: JSON.stringify({ email, password, turnstileToken }),
-      });
-      resetTurnstile();
-      setContent(mergeContent(await api<SiteContent>("/api/content")));
-      setIsAuthed(true);
-      setStatus("Logged in");
-      toast.success("Signed in to Admin Workspace.");
+      throw new Error("Supabase authentication is not configured.");
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Login failed";
       setStatus(msg);
@@ -571,9 +558,7 @@ export default function Admin() {
     setIsSaving(true);
     try {
       if (!email) throw new Error("Enter your administrator email first.");
-      if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
-      await requestAdminPasswordReset(email, turnstileToken);
-      resetTurnstile();
+      await requestAdminPasswordReset(email);
       setStatus("If this is the approved administrator email, a password-reset link has been sent.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to start password recovery.";
@@ -770,7 +755,7 @@ export default function Admin() {
               <ShieldCheck className="h-6 w-6 text-teal-700" />
             </span>
             <h2>Admin Authentication</h2>
-            <p>Verify your administrator password, then enter the one-time code sent to that email.</p>
+            <p>{otpRequested ? "Enter the MFA code from your authenticator app." : "Sign in with your administrator email and password."}</p>
             <div className="mt-5 space-y-4">
               <Field label="Admin Email">
                 <div className="admin-login-input-row">
@@ -800,9 +785,7 @@ export default function Admin() {
                     autoComplete="current-password"
                   />
                 </div>
-              </Field> : null}
-
-              {otpRequested ? <Field label="One-time verification code">
+              </Field> : <Field label="MFA verification code">
                 <div className="admin-login-input-row">
                   <KeyRound className="admin-login-field-icon h-4 w-4 text-slate-500 pointer-events-none" />
                   <input
@@ -815,10 +798,10 @@ export default function Admin() {
                     required
                   />
                 </div>
-              </Field> : null}
+              </Field>}
               <div>
                 <p className={labelClass}>Security check</p>
-                {turnstileSiteKey ? <div ref={turnstileContainerRef} className="mt-2 min-h-[65px]" /> : <p className="mt-2 text-sm text-red-700">CAPTCHA is not configured. Admin sign-in is disabled.</p>}
+                {turnstileSiteKey ? <div ref={turnstileContainerRef} className="mt-2 min-h-[65px]" /> : <p className="mt-2 text-sm text-red-700">CAPTCHA is not configured.</p>}
               </div>
             </div>
             {status ? <p className="admin-status-note mt-3">{status}</p> : null}
@@ -828,7 +811,7 @@ export default function Admin() {
               className={`${buttonBase} admin-login-button mt-4`}
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              {otpRequested ? "Verify and Sign In" : "Send verification code"}
+              {otpRequested ? "Verify and Sign In" : "Continue to MFA"}
             </button>
             {!otpRequested ? <button
               type="button"

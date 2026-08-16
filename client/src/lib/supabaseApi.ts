@@ -914,13 +914,14 @@ export async function deleteOnlineApplicationFromSupabase(id: string): Promise<b
 // Admin Auth & Authorization (Table: admin_users + Supabase Auth)
 // ==========================================
 
-export async function adminLoginWithSupabase(email: string, pass: string) {
+export async function adminLoginWithSupabase(email: string, pass: string, captchaToken: string) {
   if (!supabase) throw new Error("Supabase credentials not configured.");
 
   // 1. Authenticate with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: pass,
+    options: { captchaToken },
   });
 
   if (authError) {
@@ -952,58 +953,40 @@ export async function adminLoginWithSupabase(email: string, pass: string) {
   return authData;
 }
 
-export async function startAdminPasswordOtp(email: string, password: string, turnstileToken: string): Promise<void> {
-  const response = await fetch("/api/admin/password-challenge", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, password, turnstileToken }),
+export async function startAdminMfaChallenge() {
+  if (!supabase) throw new Error("Supabase credentials are not configured.");
+
+  const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
+  if (factorsError) throw factorsError;
+  const factor = factors.totp.find((item) => item.status === "verified");
+  if (!factor) {
+    await supabase.auth.signOut({ scope: "local" });
+    throw new Error("MFA is not enrolled for this administrator account.");
+  }
+
+  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
+    factorId: factor.id,
   });
-  const payload = await response.json().catch(() => ({})) as { message?: string };
-  if (!response.ok) {
-    throw new Error(payload.message || "Unable to verify credentials. Please try again later.");
+  if (challengeError || !challenge) throw challengeError || new Error("Unable to start MFA verification.");
+  return { factorId: factor.id, challengeId: challenge.id };
+}
+
+export async function verifyAdminMfa(factorId: string, challengeId: string, code: string) {
+  if (!supabase) throw new Error("Supabase credentials are not configured.");
+  const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code });
+  if (error) throw new Error("Invalid or expired verification code.");
+  if (!(await checkSupabaseAdminSession())) {
+    await supabase.auth.signOut({ scope: "local" });
+    throw new Error("This account is not authorized as an administrator.");
   }
 }
 
-export async function requestAdminOtp(email: string, turnstileToken: string): Promise<void> {
-  const response = await fetch("/api/admin/request-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, turnstileToken }),
+export async function requestAdminPasswordReset(email: string): Promise<void> {
+  if (!supabase) throw new Error("Supabase credentials are not configured.");
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/admin?reset_password=1`,
   });
-  if (!response.ok) throw new Error("Unable to request a verification code. Please try again later.");
-}
-
-export async function requestAdminPasswordReset(email: string, turnstileToken: string): Promise<void> {
-  const response = await fetch("/api/admin/request-password-reset", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, turnstileToken }),
-  });
-  const payload = await response.json().catch(() => ({})) as { message?: string };
-  if (!response.ok) throw new Error(payload.message || "Unable to start password recovery. Please try again later.");
-}
-
-export async function verifyAdminOtp(email: string, token: string, turnstileToken: string) {
-  if (!supabase) throw new Error("Supabase credentials not configured.");
-  const response = await fetch("/api/admin/verify-otp", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ email, token, turnstileToken }),
-  });
-  const payload = await response.json().catch(() => ({})) as { message?: string; accessToken?: string; refreshToken?: string };
-  if (!response.ok || !payload.accessToken || !payload.refreshToken) {
-    throw new Error(payload.message || "Unable to verify the code. Please try again later.");
-  }
-  const { data, error } = await supabase.auth.setSession({ access_token: payload.accessToken, refresh_token: payload.refreshToken });
-  if (error || !data.session || !(await checkSupabaseAdminSession())) {
-    await supabase.auth.signOut();
-    throw new Error("This verified account is not an active administrator.");
-  }
-  return data;
+  if (error) throw new Error("Unable to start password recovery. Please try again later.");
 }
 
 export async function adminLogoutWithSupabase() {
@@ -1024,6 +1007,9 @@ export async function checkSupabaseAdminSession(): Promise<boolean> {
     }
 
     if (!session || !session.user) return false;
+
+    const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (assuranceError || assurance.currentLevel !== "aal2") return false;
 
     const user = session.user;
 

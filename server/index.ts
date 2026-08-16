@@ -15,6 +15,7 @@ const resolvedDirname = typeof import.meta !== "undefined" && import.meta.url
   ? path.dirname(resolvedFilename)
   : (typeof __dirname !== "undefined" ? __dirname : process.cwd());
 const isProduction = process.env.NODE_ENV === "production";
+const isVercel = process.env.VERCEL === "1";
 
 const contentDir = process.env.CONTENT_DIR
   ? path.resolve(process.env.CONTENT_DIR)
@@ -228,12 +229,18 @@ async function supabaseRequest(pathname: string, init: RequestInit = {}) {
 }
 
 async function readFileContent() {
+  // Vercel's filesystem is read-only. Use bundled seed content for reads until
+  // persistent Supabase storage is configured.
+  if (isVercel) return getSeedContent();
   await ensureContentStore();
   const raw = await fs.readFile(contentFile, "utf8");
   return JSON.parse(raw);
 }
 
 async function writeFileContent(content: unknown) {
+  if (isVercel) {
+    throw new Error("Persistent content storage is not configured. Set DATABASE_PROVIDER=supabase and SUPABASE_SERVICE_ROLE_KEY in Vercel.");
+  }
   await ensureContentStore();
   const payload = {
     ...(content as Record<string, unknown>),
@@ -360,21 +367,26 @@ export async function createApp() {
   }
 
   app.get("/api/content", async (req, res) => {
-    const data = await readContent();
-    const jsonStr = JSON.stringify(data);
-    const etag = `W/"${crypto.createHash("md5").update(jsonStr).digest("hex")}"`;
+    try {
+      const data = await readContent();
+      const jsonStr = JSON.stringify(data);
+      const etag = `W/"${crypto.createHash("md5").update(jsonStr).digest("hex")}"`;
 
-    if (req.headers["if-none-match"] === etag) {
-      res.status(304).end();
-      return;
+      if (req.headers["if-none-match"] === etag) {
+        res.status(304).end();
+        return;
+      }
+
+      res.set({
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=10, stale-while-revalidate=120",
+        ETag: etag,
+      });
+      res.send(jsonStr);
+    } catch (error) {
+      console.error("Content API error:", error);
+      res.status(503).json({ message: "Content storage is not configured." });
     }
-
-    res.set({
-      "Content-Type": "application/json",
-      "Cache-Control": "public, max-age=10, stale-while-revalidate=120",
-      ETag: etag,
-    });
-    res.send(jsonStr);
   });
 
   // Lazy GoogleGenAI client initialization for school assistant
@@ -641,6 +653,13 @@ Could you please specify your query? For example, feel free to ask about:
       const reply = getFallbackResponse(safeMessage);
       res.json({ reply, model: "local-fallback", role: role || "assistant" });
     }
+  });
+
+  // Admin authentication and admin data access are handled exclusively by the
+  // browser Supabase client with native MFA and RLS. The old server-side
+  // password/OTP cookie endpoints are intentionally unreachable.
+  app.use("/api/admin", (_req, res) => {
+    res.status(410).json({ message: "Use Supabase Auth for administrator access." });
   });
 
   app.get("/api/admin/session", (req, res) => {
