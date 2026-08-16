@@ -1,7 +1,13 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
 const envUrl = (import.meta.env.VITE_SUPABASE_URL || "").trim();
-const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
+// Prefer Supabase's current public-key name. The legacy anon key remains a
+// compatibility fallback for older deployments.
+const envKey = (
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  ""
+).trim();
 
 const rawUrl = envUrl;
 const rawKey = envKey;
