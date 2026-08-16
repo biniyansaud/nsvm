@@ -51,8 +51,8 @@ import {
   uploadGalleryImage,
   uploadPDFDocument,
   adminLoginWithSupabase,
-  startAdminMfaChallenge,
-  verifyAdminMfa,
+  requestAdminEmailOtp,
+  verifyAdminEmailOtp,
   requestAdminPasswordReset,
   adminLogoutWithSupabase,
   SupabaseOnlineApplication,
@@ -192,8 +192,7 @@ export default function Admin() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [otpRequested, setOtpRequested] = useState(false);
-  const [mfaFactorId, setMfaFactorId] = useState("");
-  const [mfaChallengeId, setMfaChallengeId] = useState("");
+  const [otpChallengeId, setOtpChallengeId] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | undefined>(undefined);
@@ -527,15 +526,14 @@ export default function Admin() {
           if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
           await adminLoginWithSupabase(email, password, turnstileToken);
           resetTurnstile();
-          const challenge = await startAdminMfaChallenge();
-          setMfaFactorId(challenge.factorId);
-          setMfaChallengeId(challenge.challengeId);
+          const challenge = await requestAdminEmailOtp();
+          setOtpChallengeId(challenge.challengeId);
           setOtpRequested(true);
-          setStatus("Enter the verification code from your authenticator app.");
+        setStatus("Enter the verification code sent to your email.");
           return;
         }
         if (!otp.trim()) throw new Error("Enter the verification code.");
-        await verifyAdminMfa(mfaFactorId, mfaChallengeId, otp.trim());
+        await verifyAdminEmailOtp(otpChallengeId, otp.trim());
         setIsAuthed(true);
         setStatus("Signed in");
         toast.success("Welcome back! Signed in to Admin Workspace.");
@@ -755,7 +753,7 @@ export default function Admin() {
               <ShieldCheck className="h-6 w-6 text-teal-700" />
             </span>
             <h2>Admin Authentication</h2>
-            <p>{otpRequested ? "Enter the MFA code from your authenticator app." : "Sign in with your administrator email and password."}</p>
+            <p>{otpRequested ? "Enter the verification code sent to your email." : "Sign in with your administrator email and password."}</p>
             <div className="mt-5 space-y-4">
               <Field label="Admin Email">
                 <div className="admin-login-input-row">
@@ -785,7 +783,7 @@ export default function Admin() {
                     autoComplete="current-password"
                   />
                 </div>
-              </Field> : <Field label="MFA verification code">
+              </Field> : <Field label="Email verification code">
                 <div className="admin-login-input-row">
                   <KeyRound className="admin-login-field-icon h-4 w-4 text-slate-500 pointer-events-none" />
                   <input
@@ -811,7 +809,7 @@ export default function Admin() {
               className={`${buttonBase} admin-login-button mt-4`}
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              {otpRequested ? "Verify and Sign In" : "Continue to MFA"}
+              {otpRequested ? "Verify and Sign In" : "Send email code"}
             </button>
             {!otpRequested ? <button
               type="button"

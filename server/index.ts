@@ -35,6 +35,8 @@ const supabaseContentId = process.env.SUPABASE_CONTENT_ID || "radiant";
 const supabaseStorageBucket = process.env.SUPABASE_STORAGE_BUCKET || "uploads";
 const turnstileSecretKey = process.env.TURNSTILE_SECRET_KEY;
 const appUrl = process.env.APP_URL?.replace(/\/+$/, "");
+const resendApiKey = process.env.RESEND_API_KEY;
+const otpFromEmail = process.env.OTP_FROM_EMAIL || "onboarding@resend.dev";
 
 async function loadSeedContent() {
   const candidates = [
@@ -226,6 +228,47 @@ async function supabaseRequest(pathname: string, init: RequestInit = {}) {
   }
 
   return response;
+}
+
+async function verifySupabaseAccessToken(accessToken: string) {
+  if (!supabaseUrl || !supabaseServiceRoleKey) throw new Error("Supabase server configuration is missing.");
+  const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: { apikey: supabaseServiceRoleKey, Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) return null;
+  return await response.json() as { id?: string; email?: string };
+}
+
+function getBearerToken(req: express.Request) {
+  const header = req.headers.authorization || "";
+  return header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+}
+
+function hashOtp(code: string) {
+  return crypto.createHmac("sha256", adminSecret).update(code).digest("hex");
+}
+
+async function getActiveAdmin(userId: string) {
+  const response = await supabaseRequest(
+    `/rest/v1/admin_users?select=user_id,email,role,is_active&user_id=eq.${encodeURIComponent(userId)}&is_active=is.true&role=eq.admin&limit=1`,
+  );
+  const rows = await response.json() as Array<{ user_id?: string; email?: string; role?: string; is_active?: boolean }>;
+  return rows[0] || null;
+}
+
+async function sendAdminOtp(email: string, code: string) {
+  if (!resendApiKey) throw new Error("RESEND_API_KEY is not configured.");
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${resendApiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: otpFromEmail,
+      to: [email],
+      subject: "Your New Saraswati administrator verification code",
+      text: `Your administrator verification code is ${code}. It expires in 10 minutes. If you did not request this, ignore this email.`,
+    }),
+  });
+  if (!response.ok) throw new Error("OTP email delivery failed.");
 }
 
 async function readFileContent() {
@@ -655,9 +698,80 @@ Could you please specify your query? For example, feel free to ask about:
     }
   });
 
-  // Admin authentication and admin data access are handled exclusively by the
-  // browser Supabase client with native MFA and RLS. The old server-side
-  // password/OTP cookie endpoints are intentionally unreachable.
+  app.post("/api/admin/otp/request", async (req, res) => {
+    try {
+      const accessToken = getBearerToken(req);
+      const user = accessToken ? await verifySupabaseAccessToken(accessToken) : null;
+      if (!user?.id || !user.email) return res.status(401).json({ message: "Authentication required." });
+      const admin = await getActiveAdmin(user.id);
+      if (!admin) return res.status(403).json({ message: "Administrator authorization required." });
+
+      const recentResponse = await supabaseRequest(
+        `/rest/v1/admin_otp_challenges?select=id&user_id=eq.${encodeURIComponent(user.id)}&created_at=gte.${encodeURIComponent(new Date(Date.now() - 60 * 1000).toISOString())}&limit=1`,
+      );
+      const recentChallenges = await recentResponse.json() as Array<{ id?: string }>;
+      if (recentChallenges.length > 0) return res.status(429).json({ message: "Please wait before requesting another code." });
+
+      await supabaseRequest(`/rest/v1/admin_otp_challenges?user_id=eq.${encodeURIComponent(user.id)}&consumed_at=is.null`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consumed_at: new Date().toISOString() }),
+      });
+
+      const code = String(crypto.randomInt(100000, 1000000));
+      const challengeId = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      await supabaseRequest("/rest/v1/admin_otp_challenges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ id: challengeId, user_id: user.id, email: user.email.toLowerCase(), code_hash: hashOtp(code), expires_at: expiresAt }),
+      });
+      await sendAdminOtp(user.email, code);
+      res.json({ challengeId });
+    } catch (error) {
+      console.error("Admin OTP request failed:", error instanceof Error ? error.message : "unknown");
+      res.status(503).json({ message: "Unable to send a verification code. Please try again later." });
+    }
+  });
+
+  app.post("/api/admin/otp/verify", async (req, res) => {
+    try {
+      const accessToken = getBearerToken(req);
+      const user = accessToken ? await verifySupabaseAccessToken(accessToken) : null;
+      const challengeId = typeof req.body?.challengeId === "string" ? req.body.challengeId : "";
+      const code = typeof req.body?.code === "string" ? req.body.code.trim() : "";
+      if (!user?.id || !challengeId || !/^\d{6}$/.test(code)) return res.status(401).json({ message: "Invalid or expired verification code." });
+      const admin = await getActiveAdmin(user.id);
+      if (!admin) return res.status(403).json({ message: "Administrator authorization required." });
+
+      const response = await supabaseRequest(`/rest/v1/admin_otp_challenges?select=id,code_hash,attempts,expires_at&id=eq.${encodeURIComponent(challengeId)}&user_id=eq.${encodeURIComponent(user.id)}&consumed_at=is.null`);
+      const rows = await response.json() as Array<{ id: string; code_hash: string; attempts: number; expires_at: string }>;
+      const challenge = rows[0];
+      if (!challenge || challenge.attempts >= 5 || Date.parse(challenge.expires_at) <= Date.now()) {
+        return res.status(401).json({ message: "Invalid or expired verification code." });
+      }
+      if (hashOtp(code) !== challenge.code_hash) {
+        await supabaseRequest(`/rest/v1/admin_otp_challenges?id=eq.${encodeURIComponent(challengeId)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ attempts: challenge.attempts + 1 }),
+        });
+        return res.status(401).json({ message: "Invalid or expired verification code." });
+      }
+      await supabaseRequest(`/rest/v1/admin_otp_challenges?id=eq.${encodeURIComponent(challengeId)}&user_id=eq.${encodeURIComponent(user.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consumed_at: new Date().toISOString() }),
+      });
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Admin OTP verification failed:", error instanceof Error ? error.message : "unknown");
+      res.status(503).json({ message: "Unable to verify the code. Please try again later." });
+    }
+  });
+
+  // Legacy server-side admin authentication is disabled. Supabase Auth plus
+  // the email OTP endpoints above is the only supported administrator flow.
   app.use("/api/admin", (_req, res) => {
     res.status(410).json({ message: "Use Supabase Auth for administrator access." });
   });

@@ -953,32 +953,31 @@ export async function adminLoginWithSupabase(email: string, pass: string, captch
   return authData;
 }
 
-export async function startAdminMfaChallenge() {
+export async function requestAdminEmailOtp(): Promise<{ challengeId: string }> {
   if (!supabase) throw new Error("Supabase credentials are not configured.");
-
-  const { data: factors, error: factorsError } = await supabase.auth.mfa.listFactors();
-  if (factorsError) throw factorsError;
-  const factor = factors.totp.find((item) => item.status === "verified");
-  if (!factor) {
-    await supabase.auth.signOut({ scope: "local" });
-    throw new Error("MFA is not enrolled for this administrator account.");
-  }
-
-  const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({
-    factorId: factor.id,
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("Please sign in again.");
+  const response = await fetch("/api/admin/otp/request", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${session.access_token}` },
   });
-  if (challengeError || !challenge) throw challengeError || new Error("Unable to start MFA verification.");
-  return { factorId: factor.id, challengeId: challenge.id };
+  const payload = await response.json().catch(() => ({})) as { challengeId?: string; message?: string };
+  if (!response.ok || !payload.challengeId) throw new Error(payload.message || "Unable to send a verification code.");
+  return { challengeId: payload.challengeId };
 }
 
-export async function verifyAdminMfa(factorId: string, challengeId: string, code: string) {
+export async function verifyAdminEmailOtp(challengeId: string, code: string): Promise<void> {
   if (!supabase) throw new Error("Supabase credentials are not configured.");
-  const { error } = await supabase.auth.mfa.verify({ factorId, challengeId, code });
-  if (error) throw new Error("Invalid or expired verification code.");
-  if (!(await checkSupabaseAdminSession())) {
-    await supabase.auth.signOut({ scope: "local" });
-    throw new Error("This account is not authorized as an administrator.");
-  }
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error("Please sign in again.");
+  const response = await fetch("/api/admin/otp/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ challengeId, code }),
+  });
+  const payload = await response.json().catch(() => ({})) as { message?: string };
+  if (!response.ok) throw new Error(payload.message || "Invalid or expired verification code.");
+  if (!(await checkSupabaseAdminSession())) throw new Error("This account is not authorized as an administrator.");
 }
 
 export async function requestAdminPasswordReset(email: string): Promise<void> {
@@ -1007,9 +1006,6 @@ export async function checkSupabaseAdminSession(): Promise<boolean> {
     }
 
     if (!session || !session.user) return false;
-
-    const { data: assurance, error: assuranceError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (assuranceError || assurance.currentLevel !== "aal2") return false;
 
     const user = session.user;
 
