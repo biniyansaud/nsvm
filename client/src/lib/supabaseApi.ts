@@ -986,7 +986,7 @@ export async function requestAdminPasswordReset(email: string, captchaToken: str
     redirectTo: `${window.location.origin}/admin?reset_password=1`,
     captchaToken,
   });
-  if (error) throw new Error("Unable to start password recovery. Please try again later.");
+  if (error) throw new Error(error.message || "Unable to start password recovery. Please try again later.");
 }
 
 export async function adminLogoutWithSupabase() {

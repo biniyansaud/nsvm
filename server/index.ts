@@ -704,6 +704,12 @@ Could you please specify your query? For example, feel free to ask about:
 
   app.post("/api/admin/otp/request", async (req, res) => {
     try {
+      if (!supabaseUrl || !supabaseServiceRoleKey) {
+        return res.status(503).json({ message: "Admin OTP server is missing its Supabase server key." });
+      }
+      if (!resendApiKey) {
+        return res.status(503).json({ message: "Admin OTP email delivery is not configured." });
+      }
       const accessToken = getBearerToken(req);
       const user = accessToken ? await verifySupabaseAccessToken(accessToken) : null;
       if (!user?.id || !user.email) return res.status(401).json({ message: "Authentication required." });
