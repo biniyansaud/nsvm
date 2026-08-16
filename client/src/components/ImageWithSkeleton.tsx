@@ -117,13 +117,13 @@ export default function ImageWithSkeleton({
       {/* Skeleton Shimmer Loading Overlay */}
       {!isLoaded && (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center bg-slate-200/80 transition-opacity duration-500 pointer-events-none"
+          className="image-loading-surface absolute inset-0 z-10 flex items-center justify-center transition-opacity duration-300 pointer-events-none"
           aria-hidden
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 animate-[shimmer_1.5s_infinite] bg-[length:200%_100%]" />
+          <div className="image-loading-shimmer absolute inset-0 animate-[shimmer_1.8s_infinite] bg-[length:200%_100%]" />
           {showPlaceholderIcon && (
-            <div className="relative z-10 p-2 rounded-full bg-white/40 text-slate-400/80 shadow-sm backdrop-blur-xs">
-              <GraduationCap className="h-6 w-6 animate-pulse" />
+            <div className="image-loading-mark relative z-10 p-2 rounded-full shadow-sm">
+              <GraduationCap className="h-5 w-5" />
             </div>
           )}
         </div>
@@ -151,7 +151,7 @@ export default function ImageWithSkeleton({
           onLoad={handleImageLoaded}
           onError={handleImageError}
           className={`${className} transition-all duration-500 ease-out ${
-            isLoaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[1.02] blur-xs"
+            isLoaded ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-100 blur-0"
           }`}
           {...restProps}
         />

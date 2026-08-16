@@ -310,9 +310,8 @@ function getLocalNetworkAddresses() {
   return Array.from(addresses);
 }
 
-async function startServer() {
+export async function createApp() {
   const app = express();
-  const server = createServer(app);
   if (isProduction) app.set("trust proxy", 1);
 
   // Disable Express identification header
@@ -340,7 +339,9 @@ async function startServer() {
     app.use(compression());
   }
   app.use(express.json({ limit: "10mb" }));
-  await ensureContentStore();
+  // Vercel's filesystem is read-only and ephemeral. Persistent deployments use
+  // Supabase for content and storage; local/file mode keeps the existing behavior.
+  if (!useSupabaseStore()) await ensureContentStore();
 
   app.use(
     "/uploads",
@@ -1298,6 +1299,12 @@ ${noticeItems
     app.use(vite.middlewares);
   }
 
+  return app;
+}
+
+async function startServer() {
+  const app = await createApp();
+  const server = createServer(app);
   const host = process.env.HOST || "0.0.0.0";
   const port = Number(process.env.PORT || 3000);
 
@@ -1310,4 +1317,6 @@ ${noticeItems
   });
 }
 
-startServer().catch(console.error);
+if (process.env.VERCEL !== "1") {
+  startServer().catch(console.error);
+}
