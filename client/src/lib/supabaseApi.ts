@@ -914,13 +914,14 @@ export async function deleteOnlineApplicationFromSupabase(id: string): Promise<b
 // Admin Auth & Authorization (Table: admin_users + Supabase Auth)
 // ==========================================
 
-export async function adminLoginWithSupabase(email: string, pass: string) {
+export async function adminLoginWithSupabase(email: string, pass: string, captchaToken: string) {
   if (!supabase) throw new Error("Supabase credentials not configured.");
 
   // 1. Authenticate with Supabase Auth
   const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
     email,
     password: pass,
+    options: { captchaToken },
   });
 
   if (authError) {
@@ -950,19 +951,6 @@ export async function adminLoginWithSupabase(email: string, pass: string) {
   }
 
   return authData;
-}
-
-export async function verifyAdminTurnstile(captchaToken: string): Promise<void> {
-  const response = await fetch("/api/admin/captcha/verify", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ turnstileToken: captchaToken }),
-  });
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    throw new Error(data.message || "Complete the security check and try again.");
-  }
 }
 
 export async function requestAdminEmailOtp(): Promise<{ challengeId: string }> {

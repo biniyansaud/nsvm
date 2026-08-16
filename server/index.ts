@@ -774,22 +774,6 @@ Could you please specify your query? For example, feel free to ask about:
     }
   });
 
-  app.post("/api/admin/captcha/verify", async (req, res) => {
-    const ip = req.ip || req.socket.remoteAddress || "unknown";
-    const result = await verifyTurnstileTokenResult(req.body?.turnstileToken, ip);
-    const expectedHostnames = new Set(
-      (process.env.TURNSTILE_HOSTNAMES || "nsvm.vercel.app")
-        .split(",")
-        .map((hostname) => hostname.trim().toLowerCase())
-        .filter(Boolean),
-    );
-    const hostname = typeof result.hostname === "string" ? result.hostname.toLowerCase() : "";
-    if (result.success !== true || result.action !== "admin_login" || !expectedHostnames.has(hostname)) {
-      return res.status(403).json({ message: "Complete the security check and try again." });
-    }
-    res.json({ ok: true });
-  });
-
   // Legacy server-side admin authentication is disabled. Supabase Auth plus
   // the email OTP endpoints above is the only supported administrator flow.
   app.use("/api/admin", (_req, res) => {
