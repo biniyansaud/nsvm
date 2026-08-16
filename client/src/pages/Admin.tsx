@@ -582,7 +582,9 @@ export default function Admin() {
     setIsSaving(true);
     try {
       if (!email) throw new Error("Enter your administrator email first.");
-      await requestAdminPasswordReset(email);
+      if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
+      await requestAdminPasswordReset(email, turnstileToken);
+      resetTurnstile();
       setStatus("If this is the approved administrator email, a password-reset link has been sent.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to start password recovery.";
