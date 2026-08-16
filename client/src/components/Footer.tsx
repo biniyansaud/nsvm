@@ -321,7 +321,10 @@ export default function Footer() {
         </div>
 
         {/* SEO Sitemap & Internal Linking Directory */}
-        <div className="mt-8 pt-6 border-t border-white/15">
+        <div
+          className="footer-seo-directory mt-8 pt-6 border-t border-white/15"
+          aria-label="Search engine sitemap and internal links"
+        >
           <div className="bg-slate-950/50 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-white/10 shadow-lg">
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
               <div className="flex items-center gap-2.5">

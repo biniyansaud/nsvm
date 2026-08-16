@@ -9532,6 +9532,71 @@ main select:focus,
   color: var(--brand-red) !important;
 }
 
+/* Keep the hero motto legible over changing areas of the campus photograph. */
+.home-hero .hero-proof-item {
+  background: linear-gradient(135deg, rgba(5, 28, 39, 0.88), rgba(10, 78, 83, 0.82)) !important;
+  border-color: rgba(151, 235, 220, 0.42) !important;
+  color: #f8fffd !important;
+  box-shadow: 0 10px 24px rgba(3, 18, 27, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
+  backdrop-filter: blur(14px) saturate(1.15) !important;
+  text-shadow: 0 1px 2px rgba(0, 19, 25, 0.55) !important;
+}
+
+.home-hero .hero-proof-item svg {
+  color: #ffd166 !important;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.32));
+}
+
+.home-hero .hero-proof-motto {
+  color: #ffffff !important;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.025em;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.home-hero .hero-proof-motto span {
+  color: #a7f3d0 !important;
+  margin-inline: 0.12em;
+}
+
+/* Keep the crawl directory in the document for search engines without adding
+   a duplicate navigation block to the visible footer. */
+.footer-seo-directory {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Image placeholders should feel intentional, not like a stalled network request. */
+.image-loading-surface {
+  background: rgba(244, 249, 252, 0.94) !important;
+}
+
+.image-loading-shimmer {
+  background: linear-gradient(105deg, #eef5f7 12%, #ffffff 38%, #e3f0f1 62%, #eef5f7 88%) !important;
+}
+
+.image-loading-mark {
+  color: rgba(7, 95, 109, 0.62) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  border: 1px solid rgba(7, 95, 109, 0.14) !important;
+}
+
+@media (max-width: 640px) {
+  .home-hero .hero-proof-motto {
+    font-size: 0.75rem;
+  }
+}
+
 /* MOBILE NAVIGATION DRAWER PREMIUM BRAND OVERRIDES */
 .mobile-sidebar-overlay {
   background: rgba(15, 23, 42, 0.6) !important; /* Slate backdrop */

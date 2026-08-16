@@ -236,7 +236,9 @@ export default function Home() {
                   }}
                 >
                   <Compass className="h-4 w-4 text-secondary shrink-0" />
-                  Quality / Confidence / Character
+                  <span className="hero-proof-motto">
+                    Quality <span aria-hidden>/</span> Confidence <span aria-hidden>/</span> Character
+                  </span>
                 </motion.span>
               </motion.div>
             </div>
