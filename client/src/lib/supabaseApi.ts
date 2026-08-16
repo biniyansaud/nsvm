@@ -647,13 +647,21 @@ export async function fetchSiteSettingsFromSupabase(): Promise<Record<string, st
   const settings: Record<string, string> = {};
   (data || []).forEach((item) => {
     if (!item.key) return;
-    if (item.key === "site" && item.value && typeof item.value === "object") {
-      Object.entries(item.value).forEach(([key, value]) => {
-        if (typeof value === "string") settings[key] = value;
+    let value: unknown = item.value;
+    if (item.key === "site" && typeof value === "string") {
+      try {
+        value = JSON.parse(value);
+      } catch {
+        // Keep supporting ordinary string settings.
+      }
+    }
+    if (item.key === "site" && value && typeof value === "object") {
+      Object.entries(value).forEach(([key, entry]) => {
+        if (typeof entry === "string") settings[key] = entry;
       });
       return;
     }
-    if (typeof item.value === "string") settings[item.key] = item.value;
+    if (typeof value === "string") settings[item.key] = value;
   });
   return settings;
 }
@@ -680,22 +688,21 @@ export async function saveSchoolInfoToSupabase(info: Partial<SupabaseSchoolInfo>
     contact: info.contact || "",
     email: info.email || "",
   };
-  const { error } = await supabase.from("site_settings").upsert([{ key: "site", value }]);
+  const { error } = await supabase
+    .from("site_settings")
+    .upsert([{ key: "site", value: JSON.stringify(value) }], { onConflict: "key" });
   if (error) throw error;
   return true;
 }
 
 export async function saveSiteContentToSupabase(content: unknown): Promise<boolean> {
   if (!supabase) return false;
-  const source = content as { site?: unknown; home?: unknown };
-  const rows = [
-    ...(source.site ? [{ key: "site", value: source.site }] : []),
-    ...(source.home ? [{ key: "home", value: source.home }] : []),
-  ];
-  if (rows.length === 0) throw new Error("No site content was provided for Supabase.");
+  if (!content || typeof content !== "object") {
+    throw new Error("No site content was provided for Supabase.");
+  }
   const { error } = await supabase
     .from("site_content")
-    .upsert(rows, { onConflict: "key" });
+    .upsert([{ id: "main", content }], { onConflict: "id" });
   if (error) throw error;
   return true;
 }
@@ -704,13 +711,12 @@ export async function fetchSiteContentFromSupabase(): Promise<any | null> {
   if (!supabase) return null;
   const { data, error } = await supabase
     .from("site_content")
-    .select("key,value");
+    .select("id,content")
+    .eq("id", "main")
+    .maybeSingle();
 
-  if (error || !data?.length) return null;
-  return data.reduce((content: Record<string, unknown>, item: { key?: string; value?: unknown }) => {
-    if (item.key) content[item.key] = item.value;
-    return content;
-  }, {});
+  if (error || !data?.content || typeof data.content !== "object") return null;
+  return data.content;
 }
 
 // Master Site Content Loader from Live Tables
