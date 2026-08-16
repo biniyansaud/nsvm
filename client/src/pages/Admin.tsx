@@ -51,6 +51,7 @@ import {
   uploadGalleryImage,
   uploadPDFDocument,
   adminLoginWithSupabase,
+  verifyAdminTurnstile,
   requestAdminEmailOtp,
   verifyAdminEmailOtp,
   requestAdminPasswordReset,
@@ -89,7 +90,7 @@ const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string | und
 declare global {
   interface Window {
     turnstile?: {
-      render: (element: HTMLElement, options: { sitekey: string; callback: (token: string) => void; "expired-callback": () => void; "error-callback": () => void }) => string;
+      render: (element: HTMLElement, options: { sitekey: string; action?: string; appearance?: "always" | "execute" | "interaction-only"; execution?: "render" | "execute"; callback: (token: string) => void; "expired-callback": () => void; "error-callback": () => void }) => string;
       reset: (widgetId?: string) => void;
     };
   }
@@ -212,26 +213,52 @@ export default function Admin() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState("");
+  const [turnstileError, setTurnstileError] = useState("");
 
   useEffect(() => {
     if (isAuthed || passwordRecovery || !turnstileSiteKey || !turnstileContainerRef.current) return;
+    let retryTimer: number | undefined;
+    let stopped = false;
     const renderWidget = () => {
-      if (!window.turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) return;
-      turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
-        sitekey: turnstileSiteKey,
-        callback: (token) => setTurnstileToken(token),
-        "expired-callback": () => setTurnstileToken(""),
-        "error-callback": () => setTurnstileToken(""),
-      });
+      if (stopped || !window.turnstile || !turnstileContainerRef.current || turnstileWidgetIdRef.current) return;
+      try {
+        turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+          sitekey: turnstileSiteKey,
+          action: "admin_login",
+          appearance: "always",
+          execution: "render",
+          callback: (token) => {
+            setTurnstileError("");
+            setTurnstileToken(token);
+          },
+          "expired-callback": () => setTurnstileToken(""),
+          "error-callback": () => {
+            setTurnstileToken("");
+            setTurnstileError("Cloudflare security check could not load. Disable browser shields/extensions and reload.");
+          },
+        });
+      } catch {
+        setTurnstileError("Cloudflare security check could not load. Check the site key hostname and reload.");
+      }
+    };
+    const retryRender = () => {
+      renderWidget();
+      if (!turnstileWidgetIdRef.current && !stopped) retryTimer = window.setTimeout(retryRender, 250);
     };
     const script = document.createElement("script");
     script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     script.async = true;
     script.defer = true;
-    script.addEventListener("load", renderWidget);
+    script.addEventListener("load", retryRender);
+    script.addEventListener("error", () => setTurnstileError("Cloudflare security check was blocked by the browser or network."));
     document.head.appendChild(script);
-    return () => script.removeEventListener("load", renderWidget);
-  }, [isAuthed, passwordRecovery]);
+    retryRender();
+    return () => {
+      stopped = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      script.removeEventListener("load", retryRender);
+    };
+  }, [isAuthed, passwordRecovery, turnstileSiteKey]);
 
   const resetTurnstile = () => {
     setTurnstileToken("");
@@ -524,6 +551,7 @@ export default function Admin() {
         }
         if (!otpRequested) {
           if (!turnstileSiteKey || !turnstileToken) throw new Error("Complete the security check before continuing.");
+          await verifyAdminTurnstile(turnstileToken);
           await adminLoginWithSupabase(email, password, turnstileToken);
           resetTurnstile();
           const challenge = await requestAdminEmailOtp();
@@ -800,6 +828,7 @@ export default function Admin() {
               <div>
                 <p className={labelClass}>Security check</p>
                 {turnstileSiteKey ? <div ref={turnstileContainerRef} className="mt-2 min-h-[65px]" /> : <p className="mt-2 text-sm text-red-700">CAPTCHA is not configured.</p>}
+                {turnstileError ? <p className="mt-2 text-sm text-red-700">{turnstileError}</p> : null}
               </div>
             </div>
             {status ? <p className="admin-status-note mt-3">{status}</p> : null}

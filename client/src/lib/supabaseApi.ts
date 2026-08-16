@@ -953,6 +953,19 @@ export async function adminLoginWithSupabase(email: string, pass: string, captch
   return authData;
 }
 
+export async function verifyAdminTurnstile(captchaToken: string): Promise<void> {
+  const response = await fetch("/api/admin/captcha/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ turnstileToken: captchaToken }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.message || "Complete the security check and try again.");
+  }
+}
+
 export async function requestAdminEmailOtp(): Promise<{ challengeId: string }> {
   if (!supabase) throw new Error("Supabase credentials are not configured.");
   const { data: { session } } = await supabase.auth.getSession();

@@ -110,8 +110,8 @@ function hashAuditValue(value: string) {
 }
 
 /** Turnstile tokens are single-use and must always be verified server-side. */
-async function verifyTurnstileToken(token: unknown, ip: string): Promise<boolean> {
-  if (!turnstileSecretKey || typeof token !== "string" || !token.trim()) return false;
+async function verifyTurnstileTokenResult(token: unknown, ip: string): Promise<{ success?: boolean; action?: string; hostname?: string }> {
+  if (!turnstileSecretKey || typeof token !== "string" || !token.trim() || token.length > 2048) return {};
   try {
     const body = new URLSearchParams({ secret: turnstileSecretKey, response: token });
     if (ip && ip !== "unknown") body.set("remoteip", ip);
@@ -120,13 +120,17 @@ async function verifyTurnstileToken(token: unknown, ip: string): Promise<boolean
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body,
     });
-    if (!response.ok) return false;
-    const result = await response.json() as { success?: boolean };
-    return result.success === true;
+    if (!response.ok) return {};
+    return await response.json() as { success?: boolean; action?: string; hostname?: string };
   } catch (error) {
     console.error("Turnstile verification failed", { error: error instanceof Error ? error.message : "unknown" });
-    return false;
+    return {};
   }
+}
+
+async function verifyTurnstileToken(token: unknown, ip: string): Promise<boolean> {
+  const result = await verifyTurnstileTokenResult(token, ip);
+  return result.success === true;
 }
 
 function allowOtpRequest(ip: string, email: string): boolean {
@@ -768,6 +772,22 @@ Could you please specify your query? For example, feel free to ask about:
       console.error("Admin OTP verification failed:", error instanceof Error ? error.message : "unknown");
       res.status(503).json({ message: "Unable to verify the code. Please try again later." });
     }
+  });
+
+  app.post("/api/admin/captcha/verify", async (req, res) => {
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    const result = await verifyTurnstileTokenResult(req.body?.turnstileToken, ip);
+    const expectedHostnames = new Set(
+      (process.env.TURNSTILE_HOSTNAMES || "nsvm.vercel.app")
+        .split(",")
+        .map((hostname) => hostname.trim().toLowerCase())
+        .filter(Boolean),
+    );
+    const hostname = typeof result.hostname === "string" ? result.hostname.toLowerCase() : "";
+    if (result.success !== true || result.action !== "admin_login" || !expectedHostnames.has(hostname)) {
+      return res.status(403).json({ message: "Complete the security check and try again." });
+    }
+    res.json({ ok: true });
   });
 
   // Legacy server-side admin authentication is disabled. Supabase Auth plus
